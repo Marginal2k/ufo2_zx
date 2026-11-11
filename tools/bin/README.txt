@@ -1,0 +1,1 @@
+Put the console ZX0 compressor here as zx0.exe (https://github.com/einar-saukas/ZX0, releases for Windows). tools/zx0pack.py and the other packers use it when it is here (or in %ZX0%, or in PATH); without it they fall back to the slow Python port (tools/third_party/zx0, about 4 minutes per 16 KB).

@@ -1,0 +1,24 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>ufo harness</title>
+<body>
+<iframe id="f" src="/index.html" style="width:1000px;height:760px"></iframe>
+<pre id="out">starting</pre>
+<script>
+(async () => {
+  const out = document.getElementById('out');
+  const q = new URLSearchParams(location.search);
+  try {
+    const f = document.getElementById('f');
+    await new Promise(r => f.addEventListener('load', r));
+    for (let i = 0; i < 1200 && !(f.contentWindow.zxDebug); i++) await new Promise(r => setTimeout(r, 50));
+    const zx = f.contentWindow.zxDebug;
+    const mod = await import('/ufo/scripts/' + q.get('script') + '.js');
+    const res = await mod.run(zx, q);
+    out.textContent = 'DONE ' + JSON.stringify(res || {});
+  } catch (e) {
+    out.textContent = 'ERROR ' + (e && e.stack || e);
+  }
+})();
+</script>
+</body>

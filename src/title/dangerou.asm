@@ -1,0 +1,195 @@
+; *Z80
+
+;Начальное демо-меню для НЛО-2
+
+	MACRO	D_ 
+	DI
+	HALT
+	ENDM
+	MACRO	PUSH_ 
+	PUSH	HL
+	PUSH	DE
+	PUSH	BC
+	ENDM
+	MACRO	POP_ 
+	POP	BC
+	POP	DE
+	POP	HL
+	ENDM
+
+	ORG	#7000 ;->A  полуряд 12345
+	; ENT $
+	DI
+	IM	2
+	LD	A,IMTAB/256
+	LD	I,A
+	JP	TRISTA
+	DEFM	"  UFO-2 Beginning (c)1996 Mednonogov Slava  "
+
+	DEFS	#7100-$,#72	; the stack
+STK
+SCR4
+	INCBIN "xi4.dta"
+SCR2
+	INCBIN "xi1.dta"
+; the interrupt vectors (257 equal bytes) and the handler
+; (1996: the table was at #7100, I=#71 - that gives "snow" on the original 128K/+2, so it is above #8000 now)
+	DEFS	(($+255)/256)*256-$
+IMTAB	DEFS	257,IMTAB/256+1
+	DEFS	(IMTAB/256+1)*257-$
+INTRPT	PUSH_
+	EXX
+	PUSH_
+	PUSH	AF
+	EX	AF,AF'
+	PUSH	AF
+	CALL	XMUSIC+6
+	POP	AF
+	EX	AF,AF'
+	POP	AF
+	POP_
+	EXX
+	POP_
+	EI
+	RETI
+
+XMU
+	INCBIN "m_ufo.dta"
+SCR1
+	INCBIN "xi2.dta"
+SCR3
+	INCBIN "xi3.dta"
+
+XMUSIC	EQU	60000
+TRISTA	LD	(STKR+1),SP
+	LD	SP,STK-4
+	CALL	OFFS
+	XOR	A
+	OUT	(254),A
+	LD	HL,XMU+2
+	LD	DE,XMUSIC-17
+	CALL	DELPC
+	CALL	XMUSIC
+LO1	EI
+	LD	HL,SCR3
+	LD	DE,#4000
+	CALL	DELPCS
+	HALT
+	CALL	SW5
+	LD	D,15
+	CALL	WAIT
+	LD	HL,SCR2
+	LD	DE,#C000
+	PUSH	DE
+	CALL	DELPCS
+	HALT
+	CALL	SW7
+	LD	D,28
+	CALL	WAIT
+	HALT
+	CALL	SW5
+	LD	D,20
+	CALL	WAIT
+	LD	HL,SCR1
+	POP	DE
+	PUSH	DE
+	CALL	DELPCS
+	HALT
+	CALL	SW7
+	LD	D,24
+	CALL	WAIT
+	HALT
+	CALL	SW5
+	LD	D,16
+	CALL	WAIT
+	LD	HL,SCR4
+	POP	DE
+	CALL	DELPCS
+	HALT
+	CALL	SW7
+	LD	D,22
+	CALL	WAIT
+	JP	LO1
+
+
+STKR	LD	SP,#1111
+	DI
+	EX	AF,AF'
+	LD	BC,65533 ;мyз off
+	LD	A,7
+	OUT	(C),A
+	LD	BC,49149
+	LD	A,#FF
+	OUT	(C),A
+	IM	1
+	EX	AF,AF'
+	LD	C,0
+	RRA
+	JR	C,STK1
+	INC	C
+	RRA
+	JR	C,STK1
+	INC	C
+STK1	LD	A,C
+	RET
+
+WAIT	LD	BC,#F7FE
+	IN	A,(C)
+	CPL
+	AND	%111
+	JP	NZ,STKR
+	LD	B,25
+LOw_	HALT
+	DJNZ	LOw_
+	LD	B,#7F
+	IN	A,(C)
+	AND	1
+	RET	Z
+	DEC	D
+	JR	NZ,WAIT
+	RET	Z
+
+DELPCS	PUSH	DE
+	INC	HL
+	INC	HL
+	CALL	DELPC
+	POP	HL
+	LD	A,#18
+	ADD	A,H
+	LD	H,A
+	LD	A,3
+LO02	LD	B,0
+LO00	SET	6,(HL)
+	INC	HL
+	DJNZ	LO00
+	DEC	A
+	JR	NZ,LO02
+	RET	Z
+
+	INCLUDE "dzx0.asm"	; DELPC: HL - packed (ZX0), DE - where to
+
+SCR	EQU	#C000
+OFFS	CALL	SW7
+	LD	DE,SCR+#1AFE
+	LD	HL,SCR+#1AFF
+	LD	BC,768
+	LD	(HL),0
+	LDDR
+	LD	BC,6143
+	LD	(HL),255
+	LDDR
+	RET
+
+SW7	LD	A,%11111
+SWW	LD	BC,#7FFD
+	OUT	(C),A
+	RET
+SW5	LD	A,%10111
+	JR	SWW
+
+	DEFS	5000,#FF
+
+	DEFM	" MADE BY COOPER FEET        "
+
+
+TITLEE

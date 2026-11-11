@@ -1,0 +1,5 @@
+build/
+reference/
+__pycache__/
+*.pyc
+archive/UFO2_SRC/
